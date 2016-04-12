@@ -31,7 +31,7 @@
 /*--------------------------------------------------------------------------*/
 
     /* -- (none) -- */
-
+	freelist flist;
 /*--------------------------------------------------------------------------*/
 /* CONSTANTS */
 /*--------------------------------------------------------------------------*/
@@ -61,22 +61,29 @@ unsigned int init_allocator(unsigned int _basic_block_size,
   
   check_init_allocator( _basic_block_size, _length );
   //check how much extra
-  int length_log = log10(_length)/log10(2); //get log2 of the _length
-  if( length_log == 0 ) {
+  int length_log = ceil(log10(_length)/log10(2)); //get log2 of the _length
+  int truesize = pow(2, length_log);
+  char* e = (char*)malloc(truesize);		//allocate space for the user based on their input, removed sizeof header
+  Header* h1 = (Header*)e;					//typecast e to a Header*
+  
+  
+  /*
+  if( length_log ) {
     //do nothing
-    malloc(_length);
-    return _length;
+    malloc(_length + sizeof(Header));
+    //return _length;
   }
   else {
     // some math that will allocate the block, based on things like extra space
-    for( ;; ) { // unlimited loop?
-      new_block = _basic_block_size*2;
+    //for( ;; ) { // unlimited loop?
+      unsigned int new_block = _basic_block_size*2; // multiply the _basic_block_size by 2
       if( new_block >= _length) {
         malloc(new_block);
-        return new_block;
+        //return new_block;
       } 
     }
   }
+  */
   // make sure size of basic block size cannot be less than 16
   // if user inputs a number for length that isnt a multiple of block size, 
   // call a check_init_allocator() function, if the user inputs a number that is negative, or maybe too large, have a response
