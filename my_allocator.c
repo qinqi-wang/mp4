@@ -22,16 +22,16 @@
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
 
-#include <stdlib.h>
+
 #include "my_allocator.h"
-#include <math.h>
+
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */ 
 /*--------------------------------------------------------------------------*/
 
     /* -- (none) -- */
-	freelist flist;
+	static freelist flist;
 /*--------------------------------------------------------------------------*/
 /* CONSTANTS */
 /*--------------------------------------------------------------------------*/
@@ -51,8 +51,11 @@
 /* Don't forget to implement "init_allocator" and "release_allocator"! */
 
 //checks user input for allocator
-bool check_init_allocator(unsigned int _basic_block_size, unsigned int _length) {
-  if( _basic_block_size > 16) { return false; }
+void check_init_allocator(unsigned int _basic_block_size, unsigned int _length) {
+  if( _basic_block_size > 16) {
+    _basic_block_size = 32; 
+  }
+  // check if _basic_block_size is a power of 2
 
 }
 
@@ -62,10 +65,10 @@ unsigned int init_allocator(unsigned int _basic_block_size,
   check_init_allocator( _basic_block_size, _length );
   //check how much extra
   int length_log = ceil(log10(_length)/log10(2)); //get log2 of the _length
-  int truesize = pow(2, length_log);
-  char* e = (char*)malloc(truesize);		//allocate space for the user based on their input, removed sizeof header
+  int truesize = pow(2, length_log);    //take the power of 2 for that space. May create an unnecessary amount of space, however
+  char* e = (char*)malloc(truesize);		//allocate space for the user based on their input, (removed sizeof header, currently header is a part of the block rather than being tacked-on the front)
   Header* h1 = (Header*)e;					//typecast e to a Header*
-  
+  // push to freelist?
   
   /*
   if( length_log ) {
