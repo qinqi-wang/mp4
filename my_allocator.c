@@ -24,14 +24,14 @@
 
 
 #include "my_allocator.h"
-
+#include "freelist.h"
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */ 
 /*--------------------------------------------------------------------------*/
 
     /* -- (none) -- */
-	static freelist flist;
+	freelist flist;
 /*--------------------------------------------------------------------------*/
 /* CONSTANTS */
 /*--------------------------------------------------------------------------*/
@@ -64,10 +64,56 @@ unsigned int init_allocator(unsigned int _basic_block_size,
   
   check_init_allocator( _basic_block_size, _length );
   //check how much extra
-  int length_log = ceil(log10(_length)/log10(2)); //get log2 of the _length
-  int truesize = pow(2, length_log);    //take the power of 2 for that space. May create an unnecessary amount of space, however
-  char* e = (char*)malloc(truesize);		//allocate space for the user based on their input, (removed sizeof header, currently header is a part of the block rather than being tacked-on the front)
-  Header* h1 = (Header*)e;					//typecast e to a Header*
+  //int length_log = ceil(log10(_length)/log10(2)); //get log2 of the _length
+  //int truesize = pow(2, length_log);    //take the power of 2 for that space. May create an unnecessary amount of space, however
+  int totalblock = _length;
+  int billblock = _basic_block_size;
+  int secondblock = 0;
+  int flist_size = 1; //one element, the basic block size, is already in the freelist
+  //bool sb_use = false; 
+
+  while( billblock < totalblock) {
+    billblock*=2;
+	  flist_size++;
+  }
+  
+  if( billblock > _length) { // if the block allocated ends up larger than the length
+	  billblock/=2;
+	  flist_size--; //revert steps made, get smallblock that is smaller than length
+	  secondblock = _basic_block_size;
+	  while( billblock + secondblock < totalblock) {
+		  secondblock*=2;
+		  flist_size++;
+      //sb_use = true;
+	  }
+  }
+  std::cout << "billblock size: " << billblock << std::endl;
+  std::cout << "secondblock size: " << secondblock << std::endl;
+
+  char* e = (char*)malloc(billblock+secondblock);			        //currently header is a part of the block rather than being tacked-on the front
+  Flist* flist_array_head = (Flist*)malloc(flist_size * sizeof(flist));   //allocate freelist 
+  Header* h_first = (Header*)e; 							                //first header happens to point to beginning of memory
+  //for (int i = 0; i<flist_size; ++i) {
+  //  *(flist_array + i) = NULL;            // initialize freelist
+  //}
+  flist_array_head->first = h_first; //flist_array is an flist*
+  flist_array_head->last = h_first;
+  if( secondblock != 0) {                             //initialize more freelist locations
+    Header* h_second = (Header*)(h_first + billblock);
+    int index = log2(billblock/secondblock);
+    flist_array_head[index].first = h_second;
+  }
+
+  /*
+  insert_head_fl(h1, flist);
+  for (int i = 0; i<flist_size; ++i) {
+    
+  }
+  */
+
+  
+  //flist->first = h1; //first element in freelist is the Header returned from malloc
+  
   // push to freelist?
   
   /*
@@ -95,15 +141,7 @@ unsigned int init_allocator(unsigned int _basic_block_size,
   // if the biggest block isn't a multiple, give the user more then? 
   // ex. if user requests 600, give 512 block + 128 block.
   // find out number of freelists, which blocks to create
-
-  // call malloc() to create enough memory for the blocks 
-  
-  // initialize freelists
-  // 3 situations:
-  // 1) initialize 128, 512. :initialize freelist with 3 blocks - 128, and 256, set both to NULL, have 512 point to the large block
-  // 2) initialize 128, 600. :initialize free list with same 3 blocks - freelist for 256 is NULL, both 128 and 512 will be pointing to the initializer
-  // 3) 
-}
+  }
 
 
 extern Addr my_malloc(unsigned int _length) {
